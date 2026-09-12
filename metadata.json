@@ -1,0 +1,7 @@
+{
+  "name": "TriageFlow — A SaaS Playbook",
+  "description": "Universal SaaS Support Engineering & API Triage Assistant engineered by R. Hanks for API triage, ingestion pipelines, secure endpoints, and webhook delivery workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

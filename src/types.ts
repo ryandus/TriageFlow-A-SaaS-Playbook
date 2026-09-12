@@ -1,0 +1,179 @@
+export type PipelineLayer =
+  | 'Layer 1: DNS / Client Network / IdP SSO'
+  | 'Layer 2: API Gateway / Authentication Edge'
+  | 'Layer 3: Storage Ingestion Service (DB write, asset retrieval)'
+  | 'Layer 4: Worker Queues / Async Processing Containers'
+  | 'Layer 5: External Handshake (Downstream Partner API / Clearinghouse Gateway)'
+  | 'Layer 6: Webhook / Callback Notification';
+
+export type DiagnosticMode =
+  | 'Mode A: Internal 5-Paragraph Technical Triage'
+  | 'Mode B: Partner-Facing Plain Explanation';
+
+export type FactStatus = 'untested' | 'confirmed_issue' | 'ruled_out';
+
+export interface InvestigatedFact {
+  id: string;
+  label: string;
+  status: FactStatus;
+  category: 'network' | 'credentials' | 'payload' | 'upstream' | 'queue';
+  details?: string;
+}
+
+export interface EvidentiaryFields {
+  clientIdentity?: string; // Org ID / Client Identity / User Email
+  reportId: string; // Request ID / Transaction ID / Report ID
+  timestamp: string; // Exact Timestamp (UTC) & Time Zone
+  endpointUrl?: string; // Endpoint URL & HTTP Method (e.g., POST /v1/reports)
+  httpMethod?: string; // GET, POST, PUT, DELETE
+  assetReference: string; // Asset Hash / File Identifier (e.g., SHA-256 / URI / N/A)
+  errorCode: string; // HTTP Status Code & Error Payload (e.g., 401, 403, 422, 504)
+}
+
+export interface Phase1TriageProtocol {
+  // 1. Most Likely Failure Domain & Starting Point
+  likelyFailureDomains: {
+    rank: number;
+    title: string;
+    domain: string;
+    likelihood: 'Primary (High)' | 'Secondary (Moderate)' | 'Tertiary (Low)';
+    rationale: string;
+    immediateAction: string;
+  }[];
+  // 2. Client-Facing Instructions & Evidence Collection Script
+  clientEvidenceScript: {
+    introGreeting: string;
+    devToolsInstructions: string[];
+    harExportSteps: string[];
+    screenshotChecklist: string[];
+    rawCopyScript: string;
+  };
+  // 3. Evidentiary Ingestion Fields to Extract
+  evidentiaryFields: EvidentiaryFields;
+  // 4. Pipeline Demarcation
+  demarcation: {
+    activeLayer: PipelineLayer;
+    layerNumber: 1 | 2 | 3 | 4 | 5 | 6;
+    demarcationBoundary: string;
+    upstreamBoundary: string;
+    downstreamBoundary: string;
+    diagnosticFocus: string;
+  };
+}
+
+export interface IncidentInput {
+  summary: string;
+  errorCode: string;
+  pipelineLayer: PipelineLayer;
+  reportId: string;
+  timestamp: string;
+  assetReference: string;
+  diagnosticMode: DiagnosticMode;
+  investigatedFacts: InvestigatedFact[];
+  customNotes?: string;
+  clientIdentity?: string;
+  endpointUrl?: string;
+  httpMethod?: string;
+}
+
+export interface DiagnosticCommand {
+  title: string;
+  command: string;
+  description: string;
+  layer: string;
+}
+
+export interface TelemetryQuery {
+  platform: 'Datadog' | 'Elasticsearch / Kibana' | 'CloudWatch' | 'SQL Trace';
+  query: string;
+  description: string;
+}
+
+export interface SuggestedRuleOut {
+  id: string;
+  statement: string;
+  suggestedAction: string;
+  status: FactStatus;
+}
+
+export interface PartnerFacingResponse {
+  situationSummary: string;
+  whatHappened: string;
+  partnerRuleOutSteps: string[];
+  internalActionStatus: string;
+  nextStepsForPartner: string[];
+}
+
+export interface TriageOutput {
+  mode: DiagnosticMode;
+  title: string;
+  incidentRef: string;
+  severity: 'SEV-1 Critical' | 'SEV-2 Major' | 'SEV-3 Minor' | 'P4 Informational';
+  pipelineLayer: PipelineLayer;
+  // Phase 1 Protocol: Initial Complaint Mapping & Evidence Intake
+  phase1Protocol?: Phase1TriageProtocol;
+  // Mode A: Standardized 5-Paragraph Technical Triage
+  paragraphs?: {
+    num: 1 | 2 | 3 | 4 | 5;
+    heading: string;
+    content: string;
+  }[];
+  // Mode B: Partner-Facing Plain Explanation
+  partnerExplanation?: PartnerFacingResponse;
+  // Active Rule-Out & Verification
+  activeRuleOuts: SuggestedRuleOut[];
+  // Diagnostic CLI & queries
+  diagnosticCommands: DiagnosticCommand[];
+  telemetryQueries: TelemetryQuery[];
+  escalationPath: {
+    tier: string;
+    team: string;
+    sla: string;
+    contactChannel: string;
+  };
+  generatedAt: string;
+  aiAssisted: boolean;
+}
+
+export interface ClientComplaintIssue {
+  id: string;
+  category: 'authentication' | 'rate_limit' | 'data_format' | 'network' | 'storage' | 'upstream_timeout' | 'downstream_clearinghouse' | 'webhook_replay';
+  title: string;
+  confidence: 'High' | 'Medium' | 'Low';
+  suspectedLayer: PipelineLayer;
+  explanation: string;
+  immediateCheck: string;
+  suggestedAction: string;
+}
+
+export interface ClientComplaintAnalysis {
+  clientIdentity?: string;
+  sentimentOrUrgency: 'CRITICAL / Blocker' | 'HIGH / Production Degraded' | 'MEDIUM / Intermittent' | 'LOW / Query';
+  detectedSymptoms: string[];
+  likelyIssues: ClientComplaintIssue[];
+  extractedIncidentFields: {
+    summary: string;
+    errorCode: string;
+    pipelineLayer: PipelineLayer;
+    reportId: string;
+    timestamp: string;
+    assetReference: string;
+    clientIdentity?: string;
+    endpointUrl?: string;
+    httpMethod?: string;
+  };
+  recommendedClientReply: string;
+  recommendedInternalNextStep: string;
+}
+
+export interface IncidentPreset {
+  id: string;
+  name: string;
+  badge: string;
+  summary: string;
+  errorCode: string;
+  pipelineLayer: PipelineLayer;
+  reportId: string;
+  assetReference: string;
+  sampleFacts: InvestigatedFact[];
+}
