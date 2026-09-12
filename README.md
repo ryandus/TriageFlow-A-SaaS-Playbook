@@ -86,8 +86,7 @@ Generates structured Jira/Linear Markdown"]
 | **Handover Synthesizer** | Formats clean, structured markdown payloads ready for bug trackers (Jira, GitHub Issues, Linear) or ticketing platforms (Zendesk, Freshdesk). | Zero-overhead inter-team communication. |
 
 ---
-
-## 🚦 Severity & SLA Framework
+##🚦 Severity & SLA Framework
 
 TriageFlow benchmarks issues against standard SaaS operational tiers:
 
@@ -97,14 +96,12 @@ TriageFlow benchmarks issues against standard SaaS operational tiers:
 | **P2** | Core feature down; no workaround; broad user segment impacted | < 1 hour | Every 2 hours |
 | **P3** | Non-critical feature failure; viable workaround exists | < 4 hours | Daily |
 | **P4** | Cosmetic defect, minor UI anomaly, or general technical inquiry | < 12 hours | Weekly / Backlog |
-
 ---
 
 ## 🔒 Security & Data Hygiene
 
 * **Zero-Retention Model:** Client-side processing ensures ticket data, API tokens, and customer metadata remain ephemeral in local runtime memory.
 * **PII/Token Stripping Guidance:** Built-in validation checks advise agents to strip `Authorization: Bearer`, secret keys, and personal identifying information before staging logs into escalation tickets.
-
 ---
 
 ## 📄 License
