@@ -20,6 +20,14 @@ SaaS support and technical operations teams routinely encounter three critical o
 
 ---
 
+## 🚀 Access & Deployment
+
+### Live Interactive Sandbox
+Run and test the interactive triage tool directly in your browser:
+* **Interactive Engine:** [TriageFlow Live Demo](https://triageflow-saas-playbook.ai.studio/)
+
+---
+
 ## ⚡ Key Capabilities
 
 * **Dynamic Severity Scoring Matrix (P1–P4):** Evaluates issues against quantifiable impact criteria (data loss, tenant-wide degradation, security boundary breach, vs. isolated cosmetic bugs).
@@ -96,13 +104,6 @@ TriageFlow benchmarks issues against standard SaaS operational tiers:
 * **Zero-Retention Model:** Client-side processing ensures ticket data, API tokens, and customer metadata remain ephemeral in local runtime memory.
 * **PII/Token Stripping Guidance:** Built-in validation checks advise agents to strip `Authorization: Bearer`, secret keys, and personal identifying information before staging logs into escalation tickets.
 
----
-
-## 🚀 Access & Deployment
-
-### Live Interactive Sandbox
-Run and test the interactive triage tool directly in your browser:
-* **Interactive Engine:** [TriageFlow Live Demo](https://triageflow-saas-playbook.ai.studio/)
 
 ---
 
