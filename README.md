@@ -12,7 +12,7 @@ SaaS support and technical operations teams routinely encounter three critical o
 1. **Queue Drift & Inconsistent Severity Tagging:** Priority assignments vary widely by agent sentiment or customer urgency phrasing rather than business impact and service impairment.
 2. **Premature Engineering Escalation:** Up to 40% of technical escalations reach Tier 3 or Core Engineering without reproducible steps, client-side browser/network logs, or verified account configuration states.
 3. **SLA Friction:** Lack of dynamic step-by-step diagnostic workflows inflates Mean Time to Acknowledge (MTTA) and Mean Time to Resolution (MTTR).
-4. 
+
 **TriageFlow** enforces structured intake, heuristic-based severity scoring, and guardrailed playbooks directly at the point of ingestion.
 
 ---
@@ -21,6 +21,7 @@ SaaS support and technical operations teams routinely encounter three critical o
 
 ### Live Interactive Engine
 * **Interactive Triage Tool:** [Launch TriageFlow](https://ryandus.github.io/TriageFlow-A-SaaS-Playbook/)
+
 ---
 
 ## ⚡ Key Capabilities
@@ -43,8 +44,10 @@ The system is designed with a lightweight, decoupled architecture to ensure dete
 ```mermaid
 flowchart TD
     Start([Start: New Ticket])
-    Ingest[Incoming Signal Ingest<br/>Sanitizes text, headers, and tenant IDs]
-    Heuristic{Triage Heuristics Engine<br/>Evaluates business impact & assigns P1-P4}
+    Ingest["Incoming Signal Ingest
+Sanitizes text, headers, and tenant IDs"]
+    Heuristic{"Triage Heuristics Engine
+Evaluates business impact & assigns P1-P4"}
 
     subgraph Diagnostics [Diagnostic Investigation Paths]
         DiagAuth[Auth & SSO Failures]
@@ -53,9 +56,12 @@ flowchart TD
         DiagConfig[RBAC & Permissions Drift]
     end
 
-    Validator{Audit & Validation Gate<br/>Repro steps verified & PII stripped?}
-    NeedLogs[Telemetry Incomplete<br/>Prompt agent for HAR / console logs]
-    Package[Escalation Package Builder<br/>Generates structured Jira/Linear Markdown]
+    Validator{"Audit & Validation Gate
+Repro steps verified & PII stripped?"}
+    NeedLogs["Telemetry Incomplete
+Prompt agent for HAR / console logs"]
+    Package["Escalation Package Builder
+Generates structured Jira/Linear Markdown"]
     EngHandoff([Escalate to Engineering])
 
     Start --> Ingest
@@ -98,7 +104,6 @@ TriageFlow benchmarks issues against standard SaaS operational tiers:
 
 * **Zero-Retention Model:** Client-side processing ensures ticket data, API tokens, and customer metadata remain ephemeral in local runtime memory.
 * **PII/Token Stripping Guidance:** Built-in validation checks advise agents to strip `Authorization: Bearer`, secret keys, and personal identifying information before staging logs into escalation tickets.
-
 
 ---
 
