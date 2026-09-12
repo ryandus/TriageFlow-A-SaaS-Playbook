@@ -12,7 +12,7 @@ SaaS support and technical operations teams routinely encounter three critical o
 1. **Queue Drift & Inconsistent Severity Tagging:** Priority assignments vary widely by agent sentiment or customer urgency phrasing rather than business impact and service impairment.
 2. **Premature Engineering Escalation:** Up to 40% of technical escalations reach Tier 3 or Core Engineering without reproducible steps, client-side browser/network logs, or verified account configuration states.
 3. **SLA Friction:** Lack of dynamic step-by-step diagnostic workflows inflates Mean Time to Acknowledge (MTTA) and Mean Time to Resolution (MTTR).
-
+4. 
 **TriageFlow** enforces structured intake, heuristic-based severity scoring, and guardrailed playbooks directly at the point of ingestion.
 
 ---
