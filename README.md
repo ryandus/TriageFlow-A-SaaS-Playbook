@@ -22,10 +22,8 @@ SaaS support and technical operations teams routinely encounter three critical o
 
 ## 🚀 Access & Deployment
 
-### Live Interactive Sandbox
-Run and test the interactive triage tool directly in your browser:
-* **Interactive Engine:** [TriageFlow Live Demo](https://triageflow-saas-playbook.ai.studio/)
-
+### Live Interactive Engine
+* **Interactive Triage Tool:** [Launch TriageFlow](https://ryandus.github.io/TriageFlow-A-SaaS-Playbook/)
 ---
 
 ## ⚡ Key Capabilities
