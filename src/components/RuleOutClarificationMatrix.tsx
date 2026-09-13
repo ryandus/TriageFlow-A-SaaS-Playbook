@@ -67,7 +67,7 @@ export const RuleOutClarificationMatrix: React.FC<RuleOutClarificationMatrixProp
   });
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm transition-all duration-200 space-y-6">
+    <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl shadow-inner shadow-slate-900/50 backdrop-blur-sm transition-all duration-200 space-y-6">
       {/* Header & Stats Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 pb-4 border-b border-slate-800/80">
         <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export const RuleOutClarificationMatrix: React.FC<RuleOutClarificationMatrixProp
             <ShieldQuestion className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
               Root-Cause Elimination
             </span>
             <div className="flex items-center gap-2.5 mt-0.5">
@@ -190,7 +190,7 @@ export const RuleOutClarificationMatrix: React.FC<RuleOutClarificationMatrixProp
                     ? 'bg-emerald-950/20 border-emerald-800/40 text-slate-200'
                     : fact.status === 'confirmed_issue'
                     ? 'bg-rose-950/20 border-rose-800/40 text-slate-200'
-                    : 'bg-slate-950/60 border-slate-800 text-slate-300'
+                    : 'bg-slate-950/40 border-slate-800/60 text-slate-300 shadow-inner shadow-slate-950/50 hover:bg-slate-900/60'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
