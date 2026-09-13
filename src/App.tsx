@@ -283,7 +283,7 @@ const handleRemoveFact = (id: string) => {
   errorCode={incidentInput.errorCode}
 />
         {/* Two-Column Grid: Form & Rule-Out Matrix on left, Triage Dossier on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Input Fields & Rule-Out Clarification Matrix (5 cols on lg) */}
           <div className="lg:col-span-5 space-y-8">
             <IncidentForm
