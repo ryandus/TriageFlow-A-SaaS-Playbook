@@ -42,7 +42,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [history, setHistory] = useState<TriageOutput[]>([]);
   const [aiAvailable, setAiAvailable] = useState(false);
-
+  const [intakeTab, setIntakeTab] = useState<'parse' | 'manual' | 'presets'>('parse');
   // Clear current incident state back to clean blank slate
   const handleClearIncident = () => {
     setIncidentInput(EMPTY_INCIDENT);
@@ -255,18 +255,9 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Prominent Client-Specific Complaint Analyzer at top of dashboard */}
-        <ClientComplaintAnalyzer
-          onApplyAnalysis={handleApplyClientComplaintData}
-          aiAvailable={aiAvailable}
-        />
-
-        {/* Pipeline Visualizer & Demarcation */}
-        <PipelineVisualizer
-          selectedLayer={incidentInput.pipelineLayer}
-          onSelectLayer={handleSelectLayer}
-          errorCode={incidentInput.errorCode}
-        />
+{/* Unified Tabbed Ingestion Container */}
+<ClientComplaintAnalyzer aiAvailable={aiAvailable} onApplyAnalysis={handleApplyClientComplaintData} />
+<PipelineVisualizer selectedLayer={incidentInput.pipelineLayer} onSelectLayer={handleSelectLayer} errorCode={incidentInput.errorCode} />
 
         {/* Two-Column Grid: Form & Rule-Out Matrix on left, Triage Dossier on right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
