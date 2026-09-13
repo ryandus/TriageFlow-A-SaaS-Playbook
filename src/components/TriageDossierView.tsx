@@ -52,7 +52,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
 
   if (!triage) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm transition-all duration-200 space-y-6">
+      <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl shadow-inner shadow-slate-900/50 backdrop-blur-sm transition-all duration-200 space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner">
@@ -208,7 +208,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm transition-all duration-200 space-y-6">
+    <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl shadow-inner shadow-slate-900/50 backdrop-blur-sm transition-all duration-200 space-y-6">
       {/* Header Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div>
@@ -336,7 +336,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
             {triage.paragraphs.map((para) => (
               <div
                 key={para.num}
-                className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-700"
+                className="bg-slate-950/50 shadow-inner shadow-slate-950 border border-slate-800/80 rounded-xl p-4 sm:p-5 transition-all hover:bg-slate-900/40 hover:border-slate-600 cursor-default"
               >
                 <div className="flex items-center gap-2.5 mb-2.5">
                   <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xs font-bold font-mono">
@@ -347,7 +347,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
                   </h4>
                 </div>
 
-                <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line pl-8 font-sans">
+                <div className="text-xs sm:text-[13px] text-slate-200 leading-relaxed whitespace-pre-line pl-8 font-mono tracking-tight">
                   {para.content}
                 </div>
               </div>
@@ -368,7 +368,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
 
           <div className="space-y-3.5">
             {/* Section 1: Situation Summary */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 sm:p-5 shadow-inner shadow-slate-950/50 hover:bg-slate-900/30 transition-colors">
               <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
                 1. Situation Summary
               </h4>
@@ -378,7 +378,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
             </div>
 
             {/* Section 2: What Happened */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 sm:p-5 shadow-inner shadow-slate-950/50 hover:bg-slate-900/30 transition-colors">
               <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
                 2. What Happened (Technical Explanation)
               </h4>
@@ -388,7 +388,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
             </div>
 
             {/* Section 3: Partner-Side Rule-Out & Verification Steps */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 sm:p-5 shadow-inner shadow-slate-950/50 hover:bg-slate-900/30 transition-colors">
               <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2.5">
                 3. Verification & Rule-Out Steps for Your Team
               </h4>
@@ -403,7 +403,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
             </div>
 
             {/* Section 4: Current Remediation Status */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 sm:p-5 shadow-inner shadow-slate-950/50 hover:bg-slate-900/30 transition-colors">
               <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
                 4. What Our Team Is Doing / Current Remediation Status
               </h4>
@@ -413,7 +413,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
             </div>
 
             {/* Section 5: Action Required / Next Steps for Partner */}
-            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+            <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-4 sm:p-5 shadow-inner shadow-slate-950/50 hover:bg-slate-900/30 transition-colors">
               <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2.5">
                 5. Action Required / Next Steps
               </h4>
