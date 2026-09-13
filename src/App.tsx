@@ -57,7 +57,12 @@ export default function App() {
   );
 
   // Check health on startup
-  useEffect(() => {
+ useEffect(() => {
+    if (window.location.hostname.includes('github.io')) {
+      setAiAvailable(false);
+      return;
+    }
+
     fetch('/api/health')
       .then((r) => r.json())
       .then((data) => {
