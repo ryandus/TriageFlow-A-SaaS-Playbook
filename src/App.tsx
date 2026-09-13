@@ -188,19 +188,23 @@ export default function App() {
     setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
   };
 
-  const handleAddCustomFact = (fact: InvestigatedFact) => {
-    const updatedFacts = [...incidentInput.investigatedFacts, fact];
-    const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
-    setIncidentInput(updatedInput);
-    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-      handleGenerateTriage(updatedInput);
-    }
-  };
+const handleAddCustomFact = (fact: InvestigatedFact) => {
+  const updatedFacts = [...incidentInput.investigatedFacts, fact];
+  const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
+  setIncidentInput(updatedInput);
+  if (triageOutput !== null || incidentInput.summary.trim() !== '') {
+    handleGenerateTriage(updatedInput);
+  }
+};
 
-  const handleRemoveFact = (id: string) => {
-    const updatedFacts = incidentInput.investigatedFacts.filter((f) => f.id !== id);
-    setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
-  };
+const handleRemoveFact = (id: string) => {
+  const updatedFacts = incidentInput.investigatedFacts.filter((f) => f.id !== id);
+  const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
+  setIncidentInput(updatedInput);
+  if (triageOutput !== null || incidentInput.summary.trim() !== '') {
+    handleGenerateTriage(updatedInput);
+  }
+};
 
   // Toggle Mode A / Mode B
   const handleToggleMode = (newMode: DiagnosticMode) => {
@@ -261,9 +265,23 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 {/* Unified Tabbed Ingestion Container */}
-<ClientComplaintAnalyzer aiAvailable={aiAvailable} onApplyAnalysis={handleApplyClientComplaintData} />
-<PipelineVisualizer selectedLayer={incidentInput.pipelineLayer} onSelectLayer={handleSelectLayer} errorCode={incidentInput.errorCode} />
 
+{intakeTab === 'parse' && (
+  
+
+
+{intakeTab === 'parse' && (
+  <ClientComplaintAnalyzer
+    aiAvailable={aiAvailable}
+    onApplyAnalysis={handleApplyClientComplaintData}
+  />
+)}
+
+<PipelineVisualizer
+  selectedLayer={incidentInput.pipelineLayer}
+  onSelectLayer={handleSelectLayer}
+  errorCode={incidentInput.errorCode}
+/>
         {/* Two-Column Grid: Form & Rule-Out Matrix on left, Triage Dossier on right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Input Fields & Rule-Out Clarification Matrix (5 cols on lg) */}
