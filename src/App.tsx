@@ -17,7 +17,6 @@ import {
   Activity
 } from 'lucide-react';
 import { TriageOutput, DiagnosticMode } from '../types';
-import { Phase1ProtocolBanner } from './Phase1ProtocolBanner';
 
 interface TriageDossierViewProps {
   triage: TriageOutput | null;
@@ -317,11 +316,7 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
         </div>
       </div>
 
-      {/* Phase 1 Protocol: Initial Complaint Mapping & Evidence Intake */}
-      {triage.phase1Protocol && (
-        <Phase1ProtocolBanner protocol={triage.phase1Protocol} />
-      )}
-
+  
       {/* Mode A Content: 5 Structured Paragraphs */}
       {isModeA && triage.paragraphs && (
         <div className="space-y-4">
