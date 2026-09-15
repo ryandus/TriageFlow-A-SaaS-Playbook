@@ -42,7 +42,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [history, setHistory] = useState<TriageOutput[]>([]);
   const [aiAvailable, setAiAvailable] = useState(false);
-  const [intakeTab, setIntakeTab] = useState<'parse' | 'manual' | 'presets'>('parse');
+
   // Clear current incident state back to clean blank slate
   const handleClearIncident = () => {
     setIncidentInput(EMPTY_INCIDENT);
@@ -57,12 +57,7 @@ export default function App() {
   );
 
   // Check health on startup
- useEffect(() => {
-    if (window.location.hostname.includes('github.io')) {
-      setAiAvailable(false);
-      return;
-    }
-
+  useEffect(() => {
     fetch('/api/health')
       .then((r) => r.json())
       .then((data) => {
@@ -188,23 +183,19 @@ export default function App() {
     setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
   };
 
-const handleAddCustomFact = (fact: InvestigatedFact) => {
-  const updatedFacts = [...incidentInput.investigatedFacts, fact];
-  const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
-  setIncidentInput(updatedInput);
-  if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-    handleGenerateTriage(updatedInput);
-  }
-};
+  const handleAddCustomFact = (fact: InvestigatedFact) => {
+    const updatedFacts = [...incidentInput.investigatedFacts, fact];
+    const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
+    setIncidentInput(updatedInput);
+    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
+      handleGenerateTriage(updatedInput);
+    }
+  };
 
-const handleRemoveFact = (id: string) => {
-  const updatedFacts = incidentInput.investigatedFacts.filter((f) => f.id !== id);
-  const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
-  setIncidentInput(updatedInput);
-  if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-    handleGenerateTriage(updatedInput);
-  }
-};
+  const handleRemoveFact = (id: string) => {
+    const updatedFacts = incidentInput.investigatedFacts.filter((f) => f.id !== id);
+    setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
+  };
 
   // Toggle Mode A / Mode B
   const handleToggleMode = (newMode: DiagnosticMode) => {
@@ -264,23 +255,21 @@ const handleRemoveFact = (id: string) => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-{/* Unified Tabbed Ingestion Container */}
+        {/* Prominent Client-Specific Complaint Analyzer at top of dashboard */}
+        <ClientComplaintAnalyzer
+          onApplyAnalysis={handleApplyClientComplaintData}
+          aiAvailable={aiAvailable}
+        />
 
-  
-{intakeTab === 'parse' && (
-  <ClientComplaintAnalyzer
-    aiAvailable={aiAvailable}
-    onApplyAnalysis={handleApplyClientComplaintData}
-  />
-)}
+        {/* Pipeline Visualizer & Demarcation */}
+        <PipelineVisualizer
+          selectedLayer={incidentInput.pipelineLayer}
+          onSelectLayer={handleSelectLayer}
+          errorCode={incidentInput.errorCode}
+        />
 
-<PipelineVisualizer
-  selectedLayer={incidentInput.pipelineLayer}
-  onSelectLayer={handleSelectLayer}
-  errorCode={incidentInput.errorCode}
-/>
         {/* Two-Column Grid: Form & Rule-Out Matrix on left, Triage Dossier on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Input Fields & Rule-Out Clarification Matrix (5 cols on lg) */}
           <div className="lg:col-span-5 space-y-8">
             <IncidentForm
@@ -330,14 +319,14 @@ const handleRemoveFact = (id: string) => {
       <footer className="border-t border-slate-800/80 bg-slate-950/80 mt-12 py-6 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-semibold text-slate-300">TriageFlow — A SaaS Playbook</span>
+            <span className="font-semibold text-slate-300">TriageFlow — DFIR</span>
             <span className="hidden sm:inline text-slate-700">•</span>
             <span className="text-slate-400">Enterprise API Triage & Demarcation</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-slate-400">Universal Telemetry</span>
             <span className="font-mono text-amber-400 font-semibold bg-amber-500/10 px-3 py-1 rounded border border-amber-500/20 text-xs shadow-sm">
-              TriageFlow — A SaaS Playbook • Engineered by R. Hanks
+              TriageFlow – DFIR • Engineered by R. C. Hanks
             </span>
           </div>
         </div>
