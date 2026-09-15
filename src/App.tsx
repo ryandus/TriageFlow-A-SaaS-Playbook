@@ -1,358 +1,462 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Header } from './components/Header';
-import { PipelineVisualizer } from './components/PipelineVisualizer';
-import { IncidentForm } from './components/IncidentForm';
-import { RuleOutClarificationMatrix } from './components/RuleOutClarificationMatrix';
-import { TriageDossierView } from './components/TriageDossierView';
-import { DiagnosticRunbookView } from './components/DiagnosticRunbookView';
-import { RawLogParserModal } from './components/RawLogParserModal';
-import { ClientComplaintModal } from './components/ClientComplaintModal';
-import { ClientComplaintAnalyzer } from './components/ClientComplaintAnalyzer';
-import { IncidentHistoryDrawer } from './components/IncidentHistoryDrawer';
-import { INCIDENT_PRESETS } from './data/incidentPresets';
-import { buildDeterministicTriage, generateDefaultRuleOuts } from './lib/triageEngine';
+import React, { useState } from 'react';
 import {
-  IncidentInput,
-  TriageOutput,
-  IncidentPreset,
-  DiagnosticMode,
-  PipelineLayer,
-  FactStatus,
-  InvestigatedFact
-} from './types';
+  Copy,
+  Check,
+  Share2,
+  FileCheck,
+  Send,
+  MessageSquare,
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  Clock,
+  Layers,
+  FileText,
+  Download,
+  Terminal,
+  Activity
+} from 'lucide-react';
+import { TriageOutput, DiagnosticMode } from '../types';
+import { Phase1ProtocolBanner } from './Phase1ProtocolBanner';
 
-const EMPTY_INCIDENT: IncidentInput = {
-  summary: '',
-  errorCode: '',
-  pipelineLayer: 'Layer 1: DNS / Client Network / IdP SSO',
-  reportId: '',
-  timestamp: '',
-  assetReference: '',
-  diagnosticMode: 'Mode A: Internal 5-Paragraph Technical Triage',
-  investigatedFacts: [],
-};
+interface TriageDossierViewProps {
+  triage: TriageOutput | null;
+  onToggleMode: (newMode: DiagnosticMode) => void;
+  isLoading: boolean;
+  onSelectSamplePreset?: () => void;
+  onOpenLogParser?: () => void;
+  onOpenClientComplaint?: () => void;
+}
 
-export default function App() {
-  const [incidentInput, setIncidentInput] = useState<IncidentInput>(EMPTY_INCIDENT);
-  const [triageOutput, setTriageOutput] = useState<TriageOutput | null>(null);
+export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
+  triage,
+  onToggleMode,
+  isLoading,
+  onSelectSamplePreset,
+  onOpenLogParser,
+  onOpenClientComplaint,
+}) => {
+  const [copiedType, setCopiedType] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLogParserOpen, setIsLogParserOpen] = useState(false);
-  const [isClientComplaintOpen, setIsClientComplaintOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [history, setHistory] = useState<TriageOutput[]>([]);
-  const [aiAvailable, setAiAvailable] = useState(false);
-
-  // Clear current incident state back to clean blank slate
-  const handleClearIncident = () => {
-    setIncidentInput(EMPTY_INCIDENT);
-    setTriageOutput(null);
-  };
-
-  const isIncidentActive = Boolean(
-    triageOutput !== null ||
-    incidentInput.summary.trim() !== '' ||
-    incidentInput.errorCode.trim() !== '' ||
-    incidentInput.investigatedFacts.length > 0
-  );
-
-  // Check health on startup
-  useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.geminiConfigured) {
-          setAiAvailable(true);
-        }
-      })
-      .catch(() => {
-        setAiAvailable(false);
-      });
-  }, []);
-
-  // Generate Triage Guide
-  const handleGenerateTriage = useCallback(
-    async (overrideInput?: IncidentInput) => {
-      const current = overrideInput || incidentInput;
-      const summaryToUse = current.summary.trim() || 'Unspecified Incident Investigation';
-      const reportIdToUse = current.reportId.trim() || `REP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const timestampToUse = current.timestamp.trim() || new Date().toISOString();
-
-      const sanitized: IncidentInput = {
-        ...current,
-        summary: summaryToUse,
-        reportId: reportIdToUse,
-        timestamp: timestampToUse,
-      };
-
-      setIncidentInput(sanitized);
-      setIsLoading(true);
-
-      try {
-        const res = await fetch('/api/triage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(sanitized),
-        });
-
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
-
-        const data: TriageOutput = await res.json();
-        setTriageOutput(data);
-        setHistory((prev) => [data, ...prev.slice(0, 19)]);
-      } catch (err) {
-        console.warn('Backend triage fetch error, using client-side deterministic engine:', err);
-        const fallback = buildDeterministicTriage(sanitized);
-        setTriageOutput(fallback);
-        setHistory((prev) => [fallback, ...prev.slice(0, 19)]);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [incidentInput]
-  );
-
-  // Keyboard shortcut Ctrl+Enter or Cmd+Enter
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleGenerateTriage();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleGenerateTriage]);
-
-  // Handle Preset selection
-  const handleSelectPreset = (preset: IncidentPreset) => {
-    const updated: IncidentInput = {
-      ...incidentInput,
-      summary: preset.summary,
-      errorCode: preset.errorCode,
-      pipelineLayer: preset.pipelineLayer,
-      reportId: preset.reportId,
-      timestamp: new Date().toISOString(),
-      assetReference: preset.assetReference,
-      investigatedFacts: preset.sampleFacts,
-    };
-    setIncidentInput(updated);
-    handleGenerateTriage(updated);
-  };
-
-  // Handle Layer selection from visualizer or form
-  const handleSelectLayer = (layer: PipelineLayer) => {
-    const defaultRuleOuts = generateDefaultRuleOuts(layer, incidentInput.errorCode);
-    const convertedFacts: InvestigatedFact[] = defaultRuleOuts.map((r) => ({
-      id: r.id,
-      label: r.statement,
-      status: r.status,
-      category: 'network',
-      details: r.suggestedAction,
-    }));
-
-    const updated: IncidentInput = {
-      ...incidentInput,
-      pipelineLayer: layer,
-      investigatedFacts: convertedFacts,
-    };
-    setIncidentInput(updated);
-    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-      handleGenerateTriage(updated);
-    }
-  };
-
-  // Handle Fact Status updates
-  const handleUpdateFactStatus = (id: string, newStatus: FactStatus) => {
-    const updatedFacts = incidentInput.investigatedFacts.map((f) =>
-      f.id === id ? { ...f, status: newStatus } : f
+  if (isLoading) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 sm:p-12 shadow-sm text-center space-y-4">
+        <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold text-slate-100">Synthesizing Operational Triage Guide...</h3>
+          <p className="text-xs text-slate-400">Demarcating pipeline boundaries and cross-referencing investigated facts.</p>
+        </div>
+      </div>
     );
-    const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
-    setIncidentInput(updatedInput);
-    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-      handleGenerateTriage(updatedInput);
-    }
-  };
+  }
 
-  const handleUpdateFactDetails = (id: string, details: string) => {
-    const updatedFacts = incidentInput.investigatedFacts.map((f) =>
-      f.id === id ? { ...f, details } : f
+  if (!triage) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm transition-all duration-200 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner">
+              <FileText className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-100 tracking-tight">Operational Triage Dossier</h3>
+              <p className="text-xs text-slate-400">Autonomous 5-Paragraph Technical Triage & Partner Advisory</p>
+            </div>
+          </div>
+          <span className="text-[11px] px-3 py-1 rounded-full font-mono bg-slate-800/80 text-amber-300 border border-slate-700/80 shadow-sm flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+            <span>Awaiting Intake Telemetry</span>
+          </span>
+        </div>
+
+        <div className="text-center py-10 px-4 max-w-lg mx-auto space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600/15 via-indigo-600/15 to-purple-600/15 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-400 shadow-xl">
+            <Layers className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-base font-bold text-slate-100 tracking-tight">Ready for Incident Synthesis</h4>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
+              No incident is currently prompted. Specify an error summary and pipeline layer on the left, analyze a partner complaint, or parse raw log events to synthesize an operational runbook.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 text-xs">
+            {onOpenClientComplaint && (
+              <button
+                type="button"
+                onClick={onOpenClientComplaint}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold transition-all hover:scale-[1.02] cursor-pointer shadow-sm"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Client Complaint Analyzer</span>
+              </button>
+            )}
+
+            {onOpenLogParser && (
+              <button
+                type="button"
+                onClick={onOpenLogParser}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-blue-300 font-semibold transition-all hover:scale-[1.02] cursor-pointer shadow-sm"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                <span>Parse Raw Logs / Alerts</span>
+              </button>
+            )}
+
+            {onSelectSamplePreset && (
+              <button
+                type="button"
+                onClick={onSelectSamplePreset}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700/80 text-slate-300 font-medium transition-all hover:scale-[1.02] cursor-pointer shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Load Sample Scenario</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="font-medium text-slate-400">Multi-Tier Isolation Active</span>
+          </div>
+          <span className="font-mono text-amber-300 font-semibold bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 shadow-sm text-[11px]">
+           TriageFlow — DFIR • Engineered by R. C. Hanks
+          </span>
+        </div>
+      </div>
     );
-    setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
+  }
+
+  const isModeA = triage.mode.startsWith('Mode A');
+
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
   };
 
-  const handleAddCustomFact = (fact: InvestigatedFact) => {
-    const updatedFacts = [...incidentInput.investigatedFacts, fact];
-    const updatedInput = { ...incidentInput, investigatedFacts: updatedFacts };
-    setIncidentInput(updatedInput);
-    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-      handleGenerateTriage(updatedInput);
+  const handleDownloadMarkdown = () => {
+    const markdownContent = getFullMarkdownText();
+    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `triage-dossier-${triage.incidentRef.toLowerCase().replace(/[^a-z0-9]/g, '-')}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const getFullMarkdownText = () => {
+    let phase1Section = '';
+    if (triage.phase1Protocol) {
+      const p1 = triage.phase1Protocol;
+      phase1Section = `\n## PHASE 1: INITIAL COMPLAINT MAPPING & EVIDENCE INTAKE\n` +
+        `### Ranked Failure Domains\n` +
+        p1.likelyFailureDomains.map(d => `${d.rank}. **${d.title}** (${d.likelihood}) - Domain: ${d.domain}\n   - Rationale: ${d.rationale}\n   - Immediate Action: ${d.immediateAction}`).join('\n\n') +
+        `\n\n### Pipeline Demarcation Boundary\n` +
+        `- Active Layer: ${p1.demarcation.activeLayer}\n` +
+        `- Boundary: ${p1.demarcation.demarcationBoundary}\n` +
+        `- Upstream: ${p1.demarcation.upstreamBoundary}\n` +
+        `- Downstream: ${p1.demarcation.downstreamBoundary}\n` +
+        `- Diagnostic Focus: ${p1.demarcation.diagnosticFocus}\n\n` +
+        `### Client Evidence Collection Instructions\n` +
+        p1.clientEvidenceScript.rawCopyScript + `\n\n`;
     }
-  };
 
-  const handleRemoveFact = (id: string) => {
-    const updatedFacts = incidentInput.investigatedFacts.filter((f) => f.id !== id);
-    setIncidentInput({ ...incidentInput, investigatedFacts: updatedFacts });
-  };
-
-  // Toggle Mode A / Mode B
-  const handleToggleMode = (newMode: DiagnosticMode) => {
-    const updated: IncidentInput = {
-      ...incidentInput,
-      diagnosticMode: newMode,
-    };
-    setIncidentInput(updated);
-    if (triageOutput !== null || incidentInput.summary.trim() !== '') {
-      handleGenerateTriage(updated);
+    if (isModeA && triage.paragraphs) {
+      return `# OPERATIONAL TRIAGE DOSSIER: ${triage.incidentRef}\n` +
+        `**Severity**: ${triage.severity} | **Pipeline Layer**: ${triage.pipelineLayer}\n` +
+        `**Timestamp**: ${triage.generatedAt}\n` +
+        phase1Section +
+        `## DETAILED 5-PARAGRAPH TECHNICAL TRIAGE\n` +
+        triage.paragraphs.map(p => `### ${p.heading}\n\n${p.content}\n`).join('\n') +
+        `\n### Escalation Path\n- **Tier**: ${triage.escalationPath.tier}\n- **Team**: ${triage.escalationPath.team}\n- **SLA**: ${triage.escalationPath.sla}\n- **Channel**: ${triage.escalationPath.contactChannel}\n\n---\n*TriageFlow – DFIR • Engineered by R. C. Hanks*`;
+    } else if (triage.partnerExplanation) {
+      const pe = triage.partnerExplanation;
+      return `# PARTNER INCIDENT ADVISORY: ${triage.incidentRef}\n\n` +
+        phase1Section +
+        `### Situation Summary\n${pe.situationSummary}\n\n` +
+        `### What Happened\n${pe.whatHappened}\n\n` +
+        `### Verification & Rule-Out Steps for Your Team\n` +
+        pe.partnerRuleOutSteps.map(s => `- ${s}`).join('\n') + '\n\n' +
+        `### Current Remediation Status\n${pe.internalActionStatus}\n\n` +
+        `### Action Required / Next Steps\n` +
+        pe.nextStepsForPartner.map(s => `- ${s}`).join('\n') +
+        `\n\n---\n*TriageFlow – DFIR • Engineered by R. C. Hanks*`;
     }
+    return '';
   };
 
-  // Handle data applied from Raw Log parser
-  const handleApplyParsedLogData = (parsed: Partial<IncidentInput>) => {
-    const updated: IncidentInput = {
-      ...incidentInput,
-      ...parsed,
-      timestamp: parsed.timestamp || new Date().toISOString(),
-      pipelineLayer: (parsed.pipelineLayer as PipelineLayer) || incidentInput.pipelineLayer,
-      diagnosticMode: (parsed.diagnosticMode as DiagnosticMode) || incidentInput.diagnosticMode,
-    };
-    setIncidentInput(updated);
-    handleGenerateTriage(updated);
-  };
-
-  const handleApplyClientComplaintData = (
-    extracted: Partial<IncidentInput>,
-    shouldGenerateTriage: boolean = true
-  ) => {
-    const updated: IncidentInput = {
-      ...incidentInput,
-      ...extracted,
-      timestamp: extracted.timestamp || new Date().toISOString(),
-      pipelineLayer: (extracted.pipelineLayer as PipelineLayer) || incidentInput.pipelineLayer,
-      diagnosticMode: (extracted.diagnosticMode as DiagnosticMode) || incidentInput.diagnosticMode,
-    };
-    setIncidentInput(updated);
-    if (shouldGenerateTriage) {
-      handleGenerateTriage(updated);
+  const getSlackFormattedText = () => {
+    if (isModeA && triage.paragraphs) {
+      return `🚨 *[${triage.severity}] Triage Report: ${triage.incidentRef}*\n` +
+        `*Layer:* ${triage.pipelineLayer}\n\n` +
+        `*Diagnosis:* ${triage.paragraphs[0]?.content.slice(0, 240)}...\n\n` +
+        `*Immediate Action:* ${triage.paragraphs[4]?.content.slice(0, 200)}...\n` +
+        `*Escalation:* ${triage.escalationPath.team} (${triage.escalationPath.sla})\n\n` +
+        `_TriageFlow – DFIR • Engineered by R. C. Hanks_`;
+    } else if (triage.partnerExplanation) {
+      return `📢 *Partner Notice for ${triage.incidentRef}:*\n${triage.partnerExplanation.situationSummary}\n\n` +
+        `*Next Steps:* ${triage.partnerExplanation.nextStepsForPartner[0] || 'Under review'}\n\n` +
+        `_TriageFlow – DFIR • Engineered by R. C. Hanks_`;
     }
+    return '';
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
-      {/* Top Header */}
-      <Header
-        onSelectPreset={handleSelectPreset}
-        onOpenLogParser={() => setIsLogParserOpen(true)}
-        onOpenClientComplaint={() => setIsClientComplaintOpen(true)}
-        onOpenHistory={() => setIsHistoryOpen(true)}
-        onClearIncident={handleClearIncident}
-        isIncidentActive={isIncidentActive}
-        historyCount={history.length}
-        aiAvailable={aiAvailable}
-      />
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Prominent Client-Specific Complaint Analyzer at top of dashboard */}
-        <ClientComplaintAnalyzer
-          onApplyAnalysis={handleApplyClientComplaintData}
-          aiAvailable={aiAvailable}
-        />
-
-        {/* Pipeline Visualizer & Demarcation */}
-        <PipelineVisualizer
-          selectedLayer={incidentInput.pipelineLayer}
-          onSelectLayer={handleSelectLayer}
-          errorCode={incidentInput.errorCode}
-        />
-
-        {/* Two-Column Grid: Form & Rule-Out Matrix on left, Triage Dossier on right */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Input Fields & Rule-Out Clarification Matrix (5 cols on lg) */}
-          <div className="lg:col-span-5 space-y-8">
-            <IncidentForm
-              input={incidentInput}
-              onChange={(updated) => setIncidentInput((prev) => ({ ...prev, ...updated }))}
-              onSubmit={() => handleGenerateTriage()}
-              isLoading={isLoading}
-            />
-
-            <RuleOutClarificationMatrix
-              facts={incidentInput.investigatedFacts}
-              onUpdateFactStatus={handleUpdateFactStatus}
-              onUpdateFactDetails={handleUpdateFactDetails}
-              onAddCustomFact={handleAddCustomFact}
-              onRemoveFact={handleRemoveFact}
-              onRefreshTriage={() => handleGenerateTriage()}
-              isLoading={isLoading}
-            />
-          </div>
-
-          {/* Right Column: Triage Dossier & Diagnostic Runbooks (7 cols on lg) */}
-          <div className="lg:col-span-7 space-y-8">
-            <TriageDossierView
-              triage={triageOutput}
-              onToggleMode={handleToggleMode}
-              isLoading={isLoading}
-              onSelectSamplePreset={() => handleSelectPreset(INCIDENT_PRESETS[0])}
-              onOpenLogParser={() => setIsLogParserOpen(true)}
-              onOpenClientComplaint={() => setIsClientComplaintOpen(true)}
-            />
-
-            <DiagnosticRunbookView
-              commands={triageOutput ? triageOutput.diagnosticCommands : []}
-              queries={triageOutput ? triageOutput.telemetryQueries : []}
-              currentLayer={incidentInput.pipelineLayer}
-              reportId={incidentInput.reportId}
-              onSelectLayer={handleSelectLayer}
-              onApplyTelemetryValue={(field, val) =>
-                setIncidentInput((prev) => ({ ...prev, [field]: val }))
-              }
-            />
-          </div>
-        </div>
-      </main>
-
-      {/* Application Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 mt-12 py-6 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-semibold text-slate-300">TriageFlow — DFIR</span>
-            <span className="hidden sm:inline text-slate-700">•</span>
-            <span className="text-slate-400">Enterprise API Triage & Demarcation</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Universal Telemetry</span>
-            <span className="font-mono text-amber-400 font-semibold bg-amber-500/10 px-3 py-1 rounded border border-amber-500/20 text-xs shadow-sm">
-              TriageFlow – DFIR • Engineered by R. C. Hanks
+    <div className="bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/30 hover:bg-slate-900/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm transition-all duration-200 space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+          <div className="flex items-center gap-2.5 flex-wrap mb-2">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wide shadow-sm ${
+                triage.severity === 'SEV-1 Critical'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 ring-1 ring-rose-500/20'
+                  : triage.severity === 'SEV-2 Major'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 ring-1 ring-amber-500/20'
+                  : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 ring-1 ring-indigo-500/20'
+              }`}
+            >
+              {triage.severity}
             </span>
+
+            <span className="px-3 py-1 rounded-full text-xs font-mono bg-slate-850 text-slate-300 border border-slate-700/80 font-semibold">
+              Ref: {triage.incidentRef}
+            </span>
+
+            <span className="px-3 py-1 rounded-full text-xs bg-slate-850/80 text-slate-300 border border-slate-700/60 flex items-center gap-1.5 font-medium">
+              <Layers className="w-3.5 h-3.5 text-blue-400" />
+              <span>{triage.pipelineLayer.split(':')[0]}</span>
+            </span>
+
+            {triage.aiAssisted && (
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 flex items-center gap-1.5 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>AI Grounded</span>
+              </span>
+            )}
+          </div>
+
+          <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase block mb-1">
+            Executive Diagnostic Synthesis
+          </span>
+          <h3 className="text-lg sm:text-xl font-bold text-slate-100 tracking-tight leading-snug">
+            {triage.title}
+          </h3>
+        </div>
+
+        {/* Action Controls & Mode Switcher */}
+        <div className="flex items-center flex-wrap gap-2 text-xs self-start lg:self-center">
+          {/* Mode Switcher pill */}
+          <div className="bg-slate-950 border border-slate-700 p-0.5 rounded-lg flex items-center">
+            <button
+              id="switch-to-mode-a-btn"
+              type="button"
+              onClick={() => onToggleMode('Mode A: Internal 5-Paragraph Technical Triage')}
+              className={`px-2.5 py-1 rounded font-medium transition-all ${
+                isModeA
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Mode A (Internal 5-Para)
+            </button>
+            <button
+              id="switch-to-mode-b-btn"
+              type="button"
+              onClick={() => onToggleMode('Mode B: Partner-Facing Plain Explanation')}
+              className={`px-2.5 py-1 rounded font-medium transition-all ${
+                !isModeA
+                  ? 'bg-indigo-600 text-white font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Mode B (Partner Facing)
+            </button>
+          </div>
+
+          {/* Copy Slack */}
+          <button
+            id="copy-slack-btn"
+            type="button"
+            onClick={() => handleCopy(getSlackFormattedText(), 'slack')}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors"
+            title="Copy Slack formatted update"
+          >
+            {copiedType === 'slack' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <MessageSquare className="w-3.5 h-3.5" />}
+            <span>Slack</span>
+          </button>
+
+          {/* Copy Full Dossier */}
+          <button
+            id="copy-full-dossier-btn"
+            type="button"
+            onClick={() => handleCopy(getFullMarkdownText(), 'markdown')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold transition-colors"
+          >
+            {copiedType === 'markdown' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>Copy Dossier</span>
+          </button>
+
+          {/* Export Dossier Markdown File */}
+          <button
+            id="export-md-dossier-btn"
+            type="button"
+            onClick={handleDownloadMarkdown}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-medium transition-colors"
+            title="Download full operational dossier markdown file (TriageFlow – DFIR • Engineered by R. C. Hanks)"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export Dossier (.md)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Phase 1 Protocol: Initial Complaint Mapping & Evidence Intake */}
+      {triage.phase1Protocol && (
+        <Phase1ProtocolBanner protocol={triage.phase1Protocol} />
+      )}
+
+      {/* Mode A Content: 5 Structured Paragraphs */}
+      {isModeA && triage.paragraphs && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
+            <span className="font-semibold uppercase tracking-wider text-slate-300">
+              Standardized 5-Paragraph Technical Triage
+            </span>
+            <span>Audience: L2/L3 SaaS Support & Incident Engineering</span>
+          </div>
+
+          <div className="space-y-3.5">
+            {triage.paragraphs.map((para) => (
+              <div
+                key={para.num}
+                className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-700"
+              >
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xs font-bold font-mono">
+                    {para.num}
+                  </span>
+                  <h4 className="text-sm font-semibold text-slate-100 tracking-tight">
+                    {para.heading}
+                  </h4>
+                </div>
+
+                <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line pl-8 font-sans">
+                  {para.content}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </footer>
+      )}
 
-      {/* Modals & Drawers */}
-      <ClientComplaintModal
-        isOpen={isClientComplaintOpen}
-        onClose={() => setIsClientComplaintOpen(false)}
-        onApplyAnalysisToIncident={handleApplyClientComplaintData}
-        aiAvailable={aiAvailable}
-      />
+      {/* Mode B Content: Partner-Facing Plain Explanation */}
+      {!isModeA && triage.partnerExplanation && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
+            <span className="font-semibold uppercase tracking-wider text-slate-300">
+              Partner-Facing Operational Communication
+            </span>
+            <span>Audience: Customer Engineering & External Developers</span>
+          </div>
 
-      <RawLogParserModal
-        isOpen={isLogParserOpen}
-        onClose={() => setIsLogParserOpen(false)}
-        onApplyParsedData={handleApplyParsedLogData}
-      />
+          <div className="space-y-3.5">
+            {/* Section 1: Situation Summary */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
+                1. Situation Summary
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                {triage.partnerExplanation.situationSummary}
+              </p>
+            </div>
 
-      <IncidentHistoryDrawer
-        isOpen={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
-        history={history}
-        onSelectHistoryItem={(item) => setTriageOutput(item)}
-        onClearHistory={() => setHistory([])}
-      />
+            {/* Section 2: What Happened */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
+                2. What Happened (Technical Explanation)
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                {triage.partnerExplanation.whatHappened}
+              </p>
+            </div>
+
+            {/* Section 3: Partner-Side Rule-Out & Verification Steps */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2.5">
+                3. Verification & Rule-Out Steps for Your Team
+              </h4>
+              <ul className="space-y-2">
+                {triage.partnerExplanation.partnerRuleOutSteps.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Section 4: Current Remediation Status */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">
+                4. What Our Team Is Doing / Current Remediation Status
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                {triage.partnerExplanation.internalActionStatus}
+              </p>
+            </div>
+
+            {/* Section 5: Action Required / Next Steps for Partner */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5">
+              <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2.5">
+                5. Action Required / Next Steps
+              </h4>
+              <ul className="space-y-2">
+                {triage.partnerExplanation.nextStepsForPartner.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-200">
+                    <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Escalation Footer Bar */}
+      <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-slate-400 font-medium">Escalation Routing & SLA</div>
+            <div className="text-slate-200 font-semibold">
+              {triage.escalationPath.team} • <span className="text-amber-400">{triage.escalationPath.sla}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center flex-wrap gap-3 text-[11px]">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
+            <span>Generated: {new Date(triage.generatedAt).toUTCString()}</span>
+          </div>
+          <span className="hidden sm:inline text-slate-700">|</span>
+          <span className="font-mono text-amber-400 font-semibold bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20 shadow-sm">
+            TriageFlow — DFIR • Engineered by R. C. Hanks
+          </span>
+        </div>
+      </div>
     </div>
   );
-}
+};
