@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ShieldAlert,
   Sparkles,
-  Terminal,
   FileCode2,
   History,
   Activity,
