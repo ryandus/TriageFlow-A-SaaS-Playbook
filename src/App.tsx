@@ -455,3 +455,4 @@ export const TriageDossierView: React.FC<TriageDossierViewProps> = ({
     </div>
   );
 };
+export default App;  
