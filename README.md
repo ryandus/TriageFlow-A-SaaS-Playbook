@@ -20,8 +20,7 @@ SaaS support and technical operations teams routinely encounter three critical o
 ## 🚀 Access & Deployment
 
 ### Live Interactive Engine
-* **Interactive Triage Tool:** [Launch TriageFlow]([https://ryandus.github.io/TriageFlow-A-SaaS-Playbook/](https://ryandus.github.io/TriageFlow-DFIR/))
-
+* **Interactive Triage Tool:** [Launch TriageFlow](https://ryandus.github.io/TriageFlow-DFIR/)
 ---
 
 ## ⚡ Key Capabilities
